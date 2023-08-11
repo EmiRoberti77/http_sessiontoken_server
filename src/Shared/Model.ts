@@ -10,3 +10,17 @@ export enum AccessRight {
 export interface UserCredentials extends Account {
   accessRights: AccessRight[];
 }
+
+export enum HTTP_CODES {
+  OK = 200,
+  CREATED = 201,
+  BAD_REQUEST = 400,
+  NOT_FOUND = 401,
+}
+
+export enum HTTP_METHODS {
+  POST = 'POST',
+  PUT = 'PUT',
+  GET = 'GET',
+  DELETE = 'DELETE',
+}

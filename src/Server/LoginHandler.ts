@@ -1,6 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import { Account, Handler, SessionToken, TokenGenerator } from './Model';
 import { error } from 'console';
+import { HTTP_CODES, HTTP_METHODS } from '../Shared/Model';
 
 export class LoginHandler implements Handler {
   private req: IncomingMessage;
@@ -18,16 +19,13 @@ export class LoginHandler implements Handler {
   }
 
   public async handleRequest(): Promise<void> {
-    try {
-      const body: Account = await this.getBodyFromRequest();
-      const sessionToken = await this.tokenGenerator.generateToken(body);
-      if (sessionToken) {
-        this.res.write(JSON.stringify({ success: sessionToken.tokenId }));
-      } else {
-        this.res.write(JSON.stringify({ error: 'no session' }));
-      }
-    } catch (error: any) {
-      this.res.write(JSON.stringify({ error: error.message }));
+    switch (this.req.method) {
+      case HTTP_METHODS.POST:
+        await this.handlePost();
+        break;
+      default:
+        this.handleNotFound();
+        break;
     }
   }
 
@@ -49,5 +47,41 @@ export class LoginHandler implements Handler {
         reject(error);
       });
     });
+  }
+
+  private async handleNotFound() {
+    this.res.statusCode = HTTP_CODES.BAD_REQUEST;
+    this.res.writeHead(HTTP_CODES.BAD_REQUEST, {
+      'Content-type': 'application/json',
+    });
+    this.res.write(
+      JSON.stringify({ error: this.methodNotSupported(this.req.method!) })
+    );
+  }
+
+  private async handlePost(): Promise<void> {
+    try {
+      const body: Account = await this.getBodyFromRequest();
+      const sessionToken = await this.tokenGenerator.generateToken(body);
+      if (sessionToken) {
+        this.res.statusCode = HTTP_CODES.CREATED;
+        this.res.writeHead(HTTP_CODES.CREATED, {
+          'Content-type': 'application/json',
+        });
+        this.res.write(JSON.stringify({ sessionToken: sessionToken }));
+      } else {
+        this.res.write(JSON.stringify({ error: 'no session' }));
+      }
+    } catch (error: any) {
+      this.res.statusCode = HTTP_CODES.NOT_FOUND;
+      this.res.writeHead(HTTP_CODES.NOT_FOUND, {
+        'Content-type': 'application/json',
+      });
+      this.res.write(JSON.stringify({ error: error.message }));
+    }
+  }
+
+  private methodNotSupported(httpMethod: string): string {
+    return `${httpMethod} not supported for this endpoint`;
   }
 }
