@@ -1,11 +1,10 @@
 import { IncomingMessage, ServerResponse } from 'http';
-import { Account, Handler, SessionToken, TokenGenerator } from './Model';
-import { error } from 'console';
+import { Account, Handler, TokenGenerator } from './Model';
 import { HTTP_CODES, HTTP_METHODS } from '../Shared/Model';
+import { Utils } from './Utils';
+import { BaseHandler } from './BaseHandler';
 
-export class LoginHandler implements Handler {
-  private req: IncomingMessage;
-  private res: ServerResponse;
+export class LoginHandler extends BaseHandler {
   private tokenGenerator: TokenGenerator;
 
   constructor(
@@ -13,8 +12,7 @@ export class LoginHandler implements Handler {
     res: ServerResponse,
     tokenGenerator: TokenGenerator
   ) {
-    this.req = req;
-    this.res = res;
+    super(req, res);
     this.tokenGenerator = tokenGenerator;
   }
 
@@ -49,16 +47,6 @@ export class LoginHandler implements Handler {
     });
   }
 
-  private async handleNotFound() {
-    this.res.statusCode = HTTP_CODES.BAD_REQUEST;
-    this.res.writeHead(HTTP_CODES.BAD_REQUEST, {
-      'Content-type': 'application/json',
-    });
-    this.res.write(
-      JSON.stringify({ error: this.methodNotSupported(this.req.method!) })
-    );
-  }
-
   private async handlePost(): Promise<void> {
     try {
       const body: Account = await this.getBodyFromRequest();
@@ -71,6 +59,7 @@ export class LoginHandler implements Handler {
         this.res.write(JSON.stringify({ sessionToken: sessionToken }));
       } else {
         this.res.write(JSON.stringify({ error: 'no session' }));
+        this.res.end();
       }
     } catch (error: any) {
       this.res.statusCode = HTTP_CODES.NOT_FOUND;
@@ -78,10 +67,7 @@ export class LoginHandler implements Handler {
         'Content-type': 'application/json',
       });
       this.res.write(JSON.stringify({ error: error.message }));
+      this.res.end();
     }
-  }
-
-  private methodNotSupported(httpMethod: string): string {
-    return `${httpMethod} not supported for this endpoint`;
   }
 }

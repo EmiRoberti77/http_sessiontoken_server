@@ -1,7 +1,5 @@
-import { rejects } from 'assert';
 import { UserCredentials } from '../Shared/Model';
 import Nedb = require('nedb');
-import { join, resolve } from 'path';
 
 export class UserCredentialsDBAccess {
   private nedb: Nedb;
