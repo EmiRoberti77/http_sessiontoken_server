@@ -3,6 +3,7 @@ import { NO_PATH_ERROR, SERVER_PATH, SUCCESS_ON_START, Utils } from './Utils';
 import { LoginHandler } from './LoginHandler';
 import { Authorizer } from '../authorization/Authorizer';
 import { UserHandler } from './UserHandler';
+import { logger, LoggerLevel } from '../Logger/logger';
 
 const PORT: number = 8080;
 
@@ -19,10 +20,10 @@ export class Server {
           await new LoginHandler(req, res, this.authorizer).handleRequest();
           break;
         case SERVER_PATH.USERS:
-          await new UserHandler(req, res).handleRequest();
+          await new UserHandler(req, res, this.authorizer).handleRequest();
           break;
         default:
-          console.log(NO_PATH_ERROR(basePath));
+          logger.log(LoggerLevel.ERROR, NO_PATH_ERROR(basePath));
           break;
       }
     }).listen(PORT, () => {

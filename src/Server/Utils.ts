@@ -1,4 +1,5 @@
 import { parse, UrlWithParsedQuery } from 'url';
+import { logger, LoggerLevel } from '../Logger/logger';
 
 export class Utils {
   public static getUrlBasePath(url: string | undefined): string {
@@ -23,6 +24,7 @@ export enum SERVER_PATH {
 }
 
 export const SUCCESS_ON_START = (port: number) =>
-  console.log(`Server started on ${port}`);
+  logger.log(LoggerLevel.INF0, `server started on ${port}`);
 
 export const NO_PATH_ERROR = (path: string) => `No path found for ${path}`;
+export const UNAUTHORIZED_ERROR = 'unauthorized request';

@@ -6,7 +6,9 @@ export class UserDBAccess {
 
   constructor() {
     this.nedb = new Nedb<User>('user.db');
-    this.nedb.loadDatabase((err: Error | null) => console.log(err));
+    this.nedb.loadDatabase((err: Error | null) =>
+      console.log(err ? 'no error' : err)
+    );
   }
 
   public async putUser(user: User): Promise<any> {

@@ -19,4 +19,26 @@ export class SessionTokenDBAccess {
       });
     });
   }
+
+  public async getSessionToken(
+    tokenId: string
+  ): Promise<SessionToken | undefined> {
+    return new Promise((resolve, reject) => {
+      this.nedb.find(
+        { tokenId },
+        (err: Error | null, document: SessionToken[]) => {
+          if (err) reject(err);
+          else {
+            if (document.length === 0) {
+              console.log('No token found');
+              resolve(undefined);
+            } else {
+              console.log('token found', document[0]);
+              resolve(document[0]);
+            }
+          }
+        }
+      );
+    });
+  }
 }

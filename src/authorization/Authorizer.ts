@@ -1,9 +1,16 @@
 import { randomUUID } from 'crypto';
-import { Account, SessionToken, TokenGenerator } from '../Server/Model';
+import {
+  Account,
+  SessionToken,
+  TokenGenerator,
+  TokenRights,
+  TokenState,
+  TokenValidator,
+} from '../Server/Model';
 import { UserCredentialsDBAccess } from './UserCredentialsDBAccess';
 import { SessionTokenDBAccess } from './SessionTokenDBAccess';
 
-export class Authorizer implements TokenGenerator {
+export class Authorizer implements TokenGenerator, TokenValidator {
   private userCredentialDB = new UserCredentialsDBAccess();
   private sessionTokenDb = new SessionTokenDBAccess();
 
@@ -27,6 +34,26 @@ export class Authorizer implements TokenGenerator {
       return token;
     } else {
       return undefined;
+    }
+  }
+
+  async validateToken(tokenId: string): Promise<TokenRights> {
+    const sessionToken = await this.sessionTokenDb.getSessionToken(tokenId);
+    if (!sessionToken || !sessionToken.valid) {
+      return {
+        accessRights: [],
+        state: TokenState.INVALID,
+      };
+    } else if (sessionToken.expirationTime < new Date()) {
+      return {
+        accessRights: [],
+        state: TokenState.EXPIRED,
+      };
+    } else {
+      return {
+        accessRights: sessionToken.accessRights,
+        state: TokenState.VALID,
+      };
     }
   }
 

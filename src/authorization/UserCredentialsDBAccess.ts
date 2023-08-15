@@ -18,7 +18,6 @@ export class UserCredentialsDBAccess {
           console.log(err);
           reject(err);
         } else {
-          console.log(document);
           resolve(document);
         }
       });

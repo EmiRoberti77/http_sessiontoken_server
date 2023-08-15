@@ -6,6 +6,20 @@ Content-Type: application/json
   "username":"admin",
   "password":"admin1234"
 }
-
+###
 
 GET http://localhost:8080/users?id=123
+Authorization: 1234567890
+
+###
+
+PUT http://localhost:8080/users
+Authorization: emi12345
+
+{
+  "age":"46",
+  "name":"Emi",
+  "surname":"Roberti",
+  "email":"emi@email.com",
+  "workingPosition":"3"
+}
