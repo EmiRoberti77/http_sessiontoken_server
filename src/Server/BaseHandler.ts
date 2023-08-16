@@ -17,6 +17,8 @@ export abstract class BaseHandler {
     this.res.statusCode = code;
     this.res.writeHead(code, {
       'Content-type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': '*',
     });
     this.res.write(JSON.stringify(messageObject));
     this.res.end();
@@ -34,7 +36,7 @@ export abstract class BaseHandler {
 
   protected handleMissingQueriesParams() {
     this.respondJsonObject(HTTP_CODES.BAD_REQUEST, {
-      error: 'missing query string',
+      error: 'missing query string for id or name',
     });
   }
 

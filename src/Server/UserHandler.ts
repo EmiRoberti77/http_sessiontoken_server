@@ -28,6 +28,9 @@ export class UserHandler extends BaseHandler {
       case HTTP_METHODS.PUT:
         await this.handlePut();
         break;
+      case HTTP_METHODS.DELETE:
+        await this.handleDelete();
+        break;
       default:
         this.handleNotFound();
         break;
@@ -43,15 +46,48 @@ export class UserHandler extends BaseHandler {
       return;
     }
 
-    const user: User = (await this.getBodyFromRequest()) as User;
-    await this.user_db.putUser(user);
-    logger.log(LoggerLevel.INF0, user);
-    this.respondJsonObject(HTTP_CODES.CREATED, user);
+    try {
+      const user: User = (await this.getBodyFromRequest()) as User;
+      await this.user_db.putUser(user);
+      logger.log(LoggerLevel.INF0, user);
+      this.respondJsonObject(HTTP_CODES.CREATED, user);
+    } catch (error: any) {
+      logger.log(LoggerLevel.ERROR, { error: error.message });
+      this.respondJsonObject(HTTP_CODES.BAD_REQUEST, { error: error.message });
+    }
+  }
+
+  private async handleDelete() {
+    const authorized = await this.operationAuthorized(AccessRight.DELETE);
+    if (!authorized) {
+      this.respondJsonObject(HTTP_CODES.UNAUTHORIZED, {
+        error: UNAUTHORIZED_ERROR,
+      });
+      return;
+    }
+
+    try {
+      const parsedUrl = Utils.getUrlParameters(this.req.url);
+      const { id } = parsedUrl?.query!;
+      logger.log(LoggerLevel.INF0, { delete_id: id });
+      if (!id) {
+        this.respondJsonObject(HTTP_CODES.NOT_FOUND, { delete_id: id });
+        return;
+      }
+      const response = await this.user_db.removeUserFromDB(id as string);
+      this.respondJsonObject(
+        response ? HTTP_CODES.OK : HTTP_CODES.BAD_REQUEST,
+        { message: response }
+      );
+    } catch (error: any) {
+      logger.log(LoggerLevel.ERROR, { error: error.message });
+      this.respondJsonObject(HTTP_CODES.BAD_REQUEST, { error: error.message });
+    }
   }
 
   private async handleGet() {
     const authorized = await this.operationAuthorized(AccessRight.READ);
-    console.log('authorized', authorized);
+    logger.log(LoggerLevel.INF0, authorized);
     if (!authorized) {
       this.respondJsonObject(HTTP_CODES.UNAUTHORIZED, {
         error: UNAUTHORIZED_ERROR,
@@ -60,13 +96,21 @@ export class UserHandler extends BaseHandler {
     }
 
     const parsedUrl = Utils.getUrlParameters(this.req.url);
-    const { id } = parsedUrl?.query!;
-
-    if (!id) {
-      this.handleMissingQueriesParams();
+    const { id, name } = parsedUrl?.query!;
+    let user;
+    if (!id && !name) {
+      this.respondJsonObject(
+        HTTP_CODES.BAD_REQUEST,
+        this.handleMissingQueriesParams()
+      );
       return;
     }
-    const user = await this.user_db.getUser(id as string);
+
+    if (id) {
+      user = await this.user_db.getUser(id as string);
+    } else if (name) {
+      user = await this.user_db.getUserByName(name as string);
+    }
 
     if (!user) {
       this.respondJsonObject(HTTP_CODES.NOT_FOUND, { error: 'no user found' });

@@ -13,6 +13,18 @@ Authorization: 1234567890
 
 ###
 
+
+GET http://localhost:8080/users?name=admin
+Authorization: emi12345
+
+###
+
+
+DELETE http://localhost:8080/users?id=cfa8d87d-fdbf-48fb-827d-6bfa4250b43c
+Authorization: emi12345
+
+###
+
 PUT http://localhost:8080/users
 Authorization: emi12345
 
